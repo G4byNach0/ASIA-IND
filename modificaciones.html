@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../src/exindex.css">
+    <title>Modificar</title>
+</head>
+<body>
+    <header>
+        <div class="contenedor-logo-center" id="logo">
+          
+                <h4>Asia</h4>
+                <h6>Indumentaria</h6>
+                <span>I N T R A N E T</span>
+                <br>
+                <div class="menu-horiz-admin">
+                    <ul>
+                        <li><a href="index.html">Tienda</a></li>
+                        <li><a href="exindex.html">ABM</a></li>
+                        <li><a href="altas.html">Altas</a></li>
+                        <li><a href="listado.html">Listado</a></li>
+                        
+                        <li><a href="listadoEliminar.html">Bajas</a></li>
+                    </ul>
+                </div>         
+        </div>
+   
+</header>
+    <span class="seccion"><center>Modificaciones </center> </span>
+    <!--Contenedor ppal controlado por js, con dos formularios-->
+    <div id="app">
+        <form id="form-obtener-producto">
+            <label for="codigo">Código</label>
+            <input type="text" id="codigo" required>
+            <br>
+            <button type="submit">Modificar</button>
+           <!-- <a class="aABM" href="exindex.html">Menú ABM</a>-->
+        </form>
+        <!--Segundo form. se muestra si mostrarDatosProducto es true, lleva a la funcion guardarCambios-->
+        <div id="datos-producto" style="display: none;">
+             <div class="seccion">
+                <p>Datos del Producto</p>
+             </div>
+             <form id="form-guardar-cambios">
+                <label for="tituloModificar">Tìtulo</label>
+                <input type="text" id="tituloModificar" required>
+                <br>
+                <label for="descripcionModificar">Descripción</label>
+                <input type="text" id="descripcionModificar" required>
+                <br>
+                <label for="cantidadModificar">Cantidad</label>
+                <input type="number" id="cantidadModificar" required>
+                <br>
+                <label for="precioModificar">Precio</label>
+                <input type="number" step="0.01" id="precioModificar" required>
+                <br>
+                <img id="imagen-actual" style="max-width: 200px;display: none;">
+                <img id="imagen-vista-previa" style="max-width: 200px;display: none;">
+                <label for="nuevaImagen">Nueva Imágen</label>
+                <input type="file" id="nuevaImagen">
+                <button type="submit">Guardar Cambios</button>
+                <a class="cancelar" href="modificaciones.html">Cancelar</a>
+                
+            </form>
+        </div>
+    </div>
+    <script>
+        //const URL = "http://127.0.0.1:5000/"
+        const URL = 'https://g4bynach0.pythonanywhere.com/';
+        //cambiar USUARIO por usuario pythonanywhere
+        //const URL = "https:/USUARIO.pythonanywhere.com/"
+        let codigo = '';
+        let titulo = '';
+        let descripcion = '';
+        let cantidad = '';
+        let precio = '';
+        let imagen_url = '';
+        let imagenSeleccionada = null;
+        let imagenUrlTemp= null;
+        let mostrarDatosProducto = false;
+
+        document.getElementById('form-obtener-producto').addEventListener('submit', obtenerProducto);
+        document.getElementById('form-guardar-cambios').addEventListener('submit', guardarCambios);
+        document.getElementById('nuevaImagen').addEventListener('change', seleccionarImagen);
+        function obtenerProducto(event) {
+            event.preventDefault();
+            codigo = document.getElementById('codigo').value;
+            console.log(codigo);
+            fetch(URL + 'productos/' + codigo)
+            .then(response => {
+                if (response.ok) {
+                    return response.json()
+                } else {
+                    throw new Error('Error al obtener los datos del producto')
+                }
+            })
+            .then(data => {
+                    titulo = data.titulo;
+                    descripcion = data.descripcion;
+                    cantidad = data.cantidad;
+                    precio = data.precio;
+                    imagen_url = data.imagen_url;
+                    mostrarDatosProducto = true; //Activa la vista del segundo formulario
+                    mostrarFormulario();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Código no encontrado.');
+                });
+        }
+
+        // Muestra el formulario con los datos del producto
+
+        function mostrarFormulario() {
+            if (mostrarDatosProducto) {
+                document.getElementById('tituloModificar').value = titulo;
+                document.getElementById('descripcionModificar').value = descripcion;
+                document.getElementById('cantidadModificar').value = cantidad;
+                document.getElementById('precioModificar').value = precio;
+                const imagenActual = document.getElementById('imagen-actual');
+                if (imagen_url && ! imagenSeleccionada) {
+                    //imagenActual.src = './src/imgs/' + imagen_url;
+
+                    //  al subirla cambiar por:
+                    imagenActual.src='https://pythonanywhere.com/user/g4bynach0/files/home/g4bynach0/mysite/src/imgs/' + imagen_url;
+                    imagenActual.style.display = 'block';
+
+                } else {
+                    imagenActual.style.display = 'none';
+                }
+                document.getElementById('datos-producto').style.display = 'block';
+            } else {
+                document.getElementById('datos-producto').style.display = 'none';
+            }
+        }
+
+        function seleccionarImagen(event) {
+            const file = event.target.files[0];
+            imagenSeleccionada = file;
+            imagenUrlTemp = URL.createObjectURL(file);
+            const imagenVistaPrevia = document.getElementById('imagen-vista-previa');
+            imagenVistaPrevia.src = imagenUrlTemp;
+            imagenVistaPrevia.style.display = 'block';
+
+        }
+
+        function guardarCambios(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.append('codigo', codigo);
+            formData.append('titulo', document.getElementById('tituloModificar'). value);
+            formData.append('descripcion', document.getElementById('descripcionModificar'). value);
+            formData.append('cantidad', document.getElementById('cantidadModificar'). value);
+            formData.append('precio', document.getElementById('precioModificar'). value);
+            if (imagenSeleccionada) {
+                formData.append('imagen', imagenSeleccionada, imagenSeleccionada.name);
+                }
+                fetch(URL + 'productos/' + codigo, {
+                    method: 'PUT',
+                    body: formData,
+                })
+                .then (response => {
+                    if (response.ok) {
+                        return response.json()
+                    } else {
+                        throw new Error ('Error al guardar los cambios')
+                    }
+                })
+
+                .then(data => {
+                    alert ('Producto actualizado');
+                    limpiarFormulario();
+                })
+
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al actualizar');
+                });
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('tituloModificar'). value = '';
+            document.getElementById('descripcionModificar'). value = '';
+            document.getElementById('cantidadModificar'). value = '';
+            document.getElementById('precioModificar'). value = '';
+            document.getElementById('nuevaImagen'). value = '';
+            const imagenActual = document.getElementById('imagen-actual');
+            imagenActual.style.display = 'none';
+            const imagenVistaPrevia = document.getElementById('imagen-vista-previa');
+            imagenVistaPrevia.style.display = 'none';
+
+            codigo = '';
+            titulo = '';
+            descripcion = '';
+            cantidad = '';
+            precio = '';
+            imagen_url = '';
+            imagenSeleccionada = null;
+            imagenUrlTemp = null;
+            mostrarDatosProducto = false;
+
+            document.getElementById('datos-producto').style.display = 'none';
+                }
+
+    </script>
+    
+</body>
+</html>
